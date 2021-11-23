@@ -1,0 +1,13 @@
+[package]
+name = "rustserver"
+version = "0.1.0"
+authors = ["andrefsp <andrefsp@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+
+sqlx = { version = "0.5.9", features = ["runtime-tokio-rustls", "mysql"] }
+tokio = { version = "1.14.0", features = ["full"] }
+async-trait = "0.1.51"
