@@ -3,14 +3,17 @@ use std::result::Result;
 use std::fmt::Error;
 use std::fmt::Formatter;
 use std::cmp::{PartialEq, PartialOrd, Ord, Eq, Ordering};
+use sqlx::FromRow;
 
-pub struct User<'a> {
-    username: &'a str,
-    email: &'a str,
-    id: i32,
+#[derive(FromRow)]
+pub struct User {
+    username: String,
+    email: String,
+    id: String,
 }
 
-impl Display for User<'_> {
+
+impl Display for User {
     fn fmt(&self, fmt: &mut Formatter<'_>) -> Result<(), Error> {
         write!(
             fmt, "email: {}, username: {}, id: {}", 
@@ -19,13 +22,14 @@ impl Display for User<'_> {
     }
 }
 
-impl PartialOrd for User<'_> {
+
+impl PartialOrd for User {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.id.cmp(&other.id))
     }
 }
 
-impl Ord for User<'_> {
+impl Ord for User {
     fn cmp(&self, other: &Self) -> Ordering {
          if self.id < other.id {
             Ordering::Less
@@ -35,33 +39,33 @@ impl Ord for User<'_> {
     }
 }
 
-impl PartialEq for User<'_> {
+impl PartialEq for User {
     fn eq(&self, other: &Self) -> bool {
         self.id == other.id && self.username == other.username
     }
 }
 
-impl Eq for User<'_> {}
+impl Eq for User {}
 
 
-impl<'a> User<'a> {
-    pub fn new(username: &'a str, email: &'a str, id: i32) -> User<'a> {
+impl<'a> User {
+    pub fn new(username: &'a str, email: &'a str, id: &'a str) -> User {
         User{
-            username,
-            email,
-            id,
+            username: String::from(username),
+            email: String::from(email),
+            id: String::from(id),
         }
     }
 
     pub fn get_username(&self) -> &str {
-        self.username
+        self.username.as_str()
     }
     
     pub fn get_email(&self) -> &str {
-        self.email
+        self.email.as_str()
     }
 
-    pub fn get_id(&self) -> i32 {
-        self.id
+    pub fn get_id(&self) -> &str {
+        self.id.as_str()
     }
 }

@@ -5,19 +5,19 @@ use super::items;
 
 #[test]
 fn test_can_create_list() {
-    let user = User::new("andrefsp", "email@email.com", 32);
-    let list = List::new(1, "todo", user.get_id());
+    let user = User::new("andrefsp", "email@email.com", "32");
+    let list = List::new("1", "todo", user.get_id());
 
-    assert_eq!(list.get_id(), 1);
+    assert_eq!(list.get_id(), "1");
     assert_eq!(list.get_name(), "todo");
-    assert_eq!(list.get_user_id(), 32);
+    assert_eq!(list.get_user_id(), "32");
 }
 
 
 #[test]
 fn test_can_add_items() {   
-    let user = User::new("andrefsp", "email@email.com", 32);
-    let mut list = List::new(1, "todo", user.get_id());
+    let user = User::new("andrefsp", "email@email.com", "32");
+    let mut list = List::new("1", "todo", user.get_id());
     
     let meeting = items::new_meeting(
         12, String::from("subject")

@@ -1,34 +1,36 @@
 use super::items::ItemType;
+use sqlx::FromRow;
 
 #[allow(dead_code)]
-pub struct List<'a> {
-    id: i32,
-    user_id: i32,
-    name: &'a str,
+#[derive(FromRow)]
+pub struct List {
+    id: String,
+    user_id: String,
+    name: String,
     items: Vec<ItemType>,
 }
 
 #[allow(dead_code)]
-impl <'a> List<'a> {
-    pub fn new(id: i32, name: &'a str, user_id: i32) -> List<'a> {
+impl List {
+    pub fn new(id: &str, name: &str, user_id: &str) -> List {
         List{
-            id,
-            name,
-            user_id,
+            id: String::from(id),
+            name: String::from(name),
+            user_id: String::from(user_id),
             items: Vec::new(),
         }
     }
 
-    pub fn get_id(&self) -> i32 {
-        self.id
+    pub fn get_id(&self) -> &str {
+        self.id.as_str()
     }
 
     pub fn get_name(&self) -> &str {
-        self.name
+        self.name.as_str()
     }
 
-    pub fn get_user_id(&self) -> i32 {
-        self.user_id
+    pub fn get_user_id(&self) -> &str {
+        self.user_id.as_str()
     }
 
     pub fn add_item(&mut self, item: ItemType) {
