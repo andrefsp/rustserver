@@ -1,6 +1,6 @@
 pub mod models;
-mod persistance;
-mod service;
+pub mod persistance;
+pub mod service;
 
 #[cfg(test)]
 mod persistance_test;

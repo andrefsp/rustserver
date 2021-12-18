@@ -9,7 +9,6 @@ use super::models::user::User;
 use super::models::list::List;
 use super::models::items::ItemType;
 
-
 #[derive(Debug)]
 pub struct PersistenceError {
     message: String,
@@ -39,8 +38,8 @@ impl Error for PersistenceError {}
 // Database persistance trait
 #[automock]
 #[async_trait]
-pub trait DBPersistence {
-    async fn create_user<'u>(&self, user: User) -> Result<User, PersistenceError>;
+pub trait DBPersistence: Sync + Send {
+    async fn create_user(&self, user: User) -> Result<User, PersistenceError>;
     async fn get_user_by_id<'u>(&self, id: &'u str) -> Result<User, PersistenceError>; 
     async fn get_user_by_username<'u>(&self, _username: &'u str) -> Result<User, PersistenceError>;
     async fn create_user_list(&self);
@@ -83,7 +82,7 @@ impl Persistence {
 #[allow(dead_code)]
 #[async_trait]
 impl DBPersistence for Persistence {
-    async fn create_user<'u>(&self, user: User) -> Result<User, PersistenceError> { 
+    async fn create_user(&self, user: User) -> Result<User, PersistenceError> { 
         let result = sqlx::query("
             INSERT INTO users(id, username, email) VALUES(?, ?, ?)
         ")
@@ -124,8 +123,14 @@ impl DBPersistence for Persistence {
 }
 
 #[allow(dead_code)]
-pub fn new_persistence(pool: MySqlPool) -> Box<dyn DBPersistence> {
+pub async fn new_persistence(uri: &str) -> Box<dyn DBPersistence> {
     Box::new(Persistence{
-        pool,
+        pool: get_db_pool(uri).await,
     })
+}
+
+#[allow(dead_code)]
+async fn get_db_pool(uri: &str) -> MySqlPool {
+    let pool = MySqlPool::connect(uri).await;
+    pool.unwrap()
 }
