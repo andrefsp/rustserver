@@ -5,7 +5,7 @@ use std::fmt::Formatter;
 use std::cmp::{PartialEq, PartialOrd, Ord, Eq, Ordering};
 use sqlx::FromRow;
 
-#[derive(FromRow)]
+#[derive(FromRow, Clone)]
 pub struct User {
     username: String,
     email: String,

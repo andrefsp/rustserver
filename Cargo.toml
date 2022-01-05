@@ -10,6 +10,10 @@ edition = "2018"
 
 sqlx = { version = "0.5.9", features = ["runtime-tokio-rustls", "mysql"] }
 tokio = { version = "1.14.0", features = ["full"] }
-async-trait = "0.1.51"
+hyper = { version = "0.14.16" , features = ["full"] }
+async-trait = { version="0.1.51" }
 uuid = { version = "0.8", features = ["serde", "v4"] }
 mockall = { version = "0.10.2" }
+http = { version = "0.2.5" }
+futures = { version = "0.3.19" }
+tower = { version =  "0.4.11", features = ["full"] }

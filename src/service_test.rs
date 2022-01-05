@@ -1,6 +1,6 @@
 use super::service::MySvc;
 
-
+/*
 #[tokio::test]
 async fn test_service_uses_persistence() {
     use super::persistance::MockDBPersistence;
@@ -21,3 +21,4 @@ async fn test_service_uses_persistence() {
     let user = result.unwrap();
     assert_eq!(user.get_username(), "uname"); 
 }
+*/

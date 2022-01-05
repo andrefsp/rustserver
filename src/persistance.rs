@@ -36,9 +36,9 @@ impl Display for PersistenceError {
 impl Error for PersistenceError {}
 
 // Database persistance trait
-#[automock]
+//#[automock]
 #[async_trait]
-pub trait DBPersistence: Sync + Send {
+pub trait DBPersistence {
     async fn create_user(&self, user: User) -> Result<User, PersistenceError>;
     async fn get_user_by_id<'u>(&self, id: &'u str) -> Result<User, PersistenceError>; 
     async fn get_user_by_username<'u>(&self, _username: &'u str) -> Result<User, PersistenceError>;
@@ -50,10 +50,12 @@ pub trait DBPersistence: Sync + Send {
 
 
 #[allow(dead_code)]
-struct Persistence {
+#[derive(Clone)]
+pub struct Persistence {
     pool: MySqlPool,
 }
 
+#[allow(dead_code)]
 impl Persistence {
     async fn get_user_by_key(&self, key: &str, val: &str) ->  Result<User, PersistenceError> {
         let query = match key {
@@ -77,12 +79,8 @@ impl Persistence {
             }
         }
     }
-}
-
-#[allow(dead_code)]
-#[async_trait]
-impl DBPersistence for Persistence {
-    async fn create_user(&self, user: User) -> Result<User, PersistenceError> { 
+    
+    pub async fn create_user(&self, user: User) -> Result<User, PersistenceError> { 
         let result = sqlx::query("
             INSERT INTO users(id, username, email) VALUES(?, ?, ?)
         ")
@@ -99,11 +97,11 @@ impl DBPersistence for Persistence {
         }
     }
 
-    async fn get_user_by_id<'u>(&self, id: &'u str) -> Result<User, PersistenceError> {
+    pub async fn get_user_by_id<'u>(&self, id: &'u str) -> Result<User, PersistenceError> {
         self.get_user_by_key("id", id).await
     }
 
-    async fn get_user_by_username<'u>(&self, username: &'u str) -> Result<User, PersistenceError> {
+    pub async fn get_user_by_username<'u>(&self, username: &'u str) -> Result<User, PersistenceError> {
         self.get_user_by_key("username", username).await
     }
     
@@ -123,10 +121,10 @@ impl DBPersistence for Persistence {
 }
 
 #[allow(dead_code)]
-pub async fn new_persistence(uri: &str) -> Box<dyn DBPersistence> {
-    Box::new(Persistence{
+pub async fn new_persistence(uri: &str) -> Persistence {
+    Persistence{
         pool: get_db_pool(uri).await,
-    })
+    }
 }
 
 #[allow(dead_code)]
