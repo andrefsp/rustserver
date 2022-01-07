@@ -1,13 +1,14 @@
 use std::fmt::Display;
 use std::error::Error;
 use std::fmt::{Formatter, Error as FmtError};
-use mockall::automock;
+
+
 use sqlx::MySqlPool;
 use async_trait::async_trait;
 
+use mockall::automock;
+
 use super::models::user::User;
-use super::models::list::List;
-use super::models::items::ItemType;
 
 #[derive(Debug)]
 pub struct PersistenceError {
@@ -29,23 +30,20 @@ impl PersistenceError {
 
 impl Display for PersistenceError {
     fn fmt(&self, fmt: &mut Formatter<'_>) -> Result<(), FmtError> {
-        write!(fmt, "err: {}", self.message) 
-    } 
+        write!(fmt, "err: {}", self.message)
+    }
 }
 
 impl Error for PersistenceError {}
 
 // Database persistance trait
-//#[automock]
+#[automock]
 #[async_trait]
-pub trait DBPersistence {
+pub trait DBPersistence: Sync + Send {
     async fn create_user(&self, user: User) -> Result<User, PersistenceError>;
-    async fn get_user_by_id<'u>(&self, id: &'u str) -> Result<User, PersistenceError>; 
+    async fn get_user_by_id<'u>(&self, id: &'u str) -> Result<User, PersistenceError>;
     async fn get_user_by_username<'u>(&self, _username: &'u str) -> Result<User, PersistenceError>;
-    async fn create_user_list(&self);
-    async fn get_user_lists(&self, user_id: i32) -> Result<Vec<List>, PersistenceError>; 
-    fn get_list_items(&self, _list_id: i32) -> Vec<ItemType> ;
-    fn migrate(&self) -> Result<(), PersistenceError>;
+    async fn migrate(&self) -> Result<(), PersistenceError>;
 }
 
 
@@ -63,24 +61,27 @@ impl Persistence {
             "id" => Some("SELECT * FROM users WHERE id = ?"),
             _ => None,
         };
-                
+
         match query {
             None => panic!("Expected key with value... got {}", key),
             Some(text) => {
                 let result = sqlx::query_as::<_, User>(text)
                     .bind(val)
                     .fetch_one(&self.pool).await;
-      
+
                 match result {
-                    Err(err) => 
+                    Err(err) =>
                         Err(PersistenceError::new(err.to_string().as_str())),
-                    Ok(row) => Ok(row), 
+                    Ok(row) => Ok(row),
                 }
             }
         }
     }
-    
-    pub async fn create_user(&self, user: User) -> Result<User, PersistenceError> { 
+}
+
+#[async_trait]
+impl DBPersistence for Persistence {
+    async fn create_user(&self, user: User) -> Result<User, PersistenceError> {
         let result = sqlx::query("
             INSERT INTO users(id, username, email) VALUES(?, ?, ?)
         ")
@@ -91,39 +92,22 @@ impl Persistence {
             .await;
 
         match result {
-            Err(err) => 
+            Err(err) =>
                 Err(PersistenceError::new(err.to_string().as_str())),
             Ok(_) => Ok(user),
         }
     }
 
-    pub async fn get_user_by_id<'u>(&self, id: &'u str) -> Result<User, PersistenceError> {
+    async fn get_user_by_id<'u>(&self, id: &'u str) -> Result<User, PersistenceError> {
         self.get_user_by_key("id", id).await
     }
 
-    pub async fn get_user_by_username<'u>(&self, username: &'u str) -> Result<User, PersistenceError> {
+    async fn get_user_by_username<'u>(&self, username: &'u str) -> Result<User, PersistenceError> {
         self.get_user_by_key("username", username).await
     }
-    
-    async fn create_user_list(&self) {}
 
-    async fn get_user_lists(&self, _user_id: i32) -> Result<Vec<List>, PersistenceError> {
-        Ok(Vec::new())
-    }
-
-    fn get_list_items(&self, _list_id: i32) -> Vec<ItemType> {
-        Vec::new()
-    }
-
-    fn migrate(&self) -> Result<(), PersistenceError> {
+    async fn migrate(&self) -> Result<(), PersistenceError> {
         Ok(())
-    }
-}
-
-#[allow(dead_code)]
-pub async fn new_persistence(uri: &str) -> Persistence {
-    Persistence{
-        pool: get_db_pool(uri).await,
     }
 }
 
@@ -131,4 +115,11 @@ pub async fn new_persistence(uri: &str) -> Persistence {
 async fn get_db_pool(uri: &str) -> MySqlPool {
     let pool = MySqlPool::connect(uri).await;
     pool.unwrap()
+}
+
+#[allow(dead_code)]
+pub async fn new_persistence(uri: &str) -> Box<dyn DBPersistence> {
+    Box::new(Persistence{
+        pool: get_db_pool(uri).await,
+    })
 }

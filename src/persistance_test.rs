@@ -17,7 +17,7 @@ fn new_test_user() -> User {
 
 #[tokio::test]
 async fn test_persistence_create_and_get_user() {
-    let mut p = new_persistence(DB_URI).await;
+    let p = new_persistence(DB_URI).await;
     let user = new_test_user(); 
 
     let result = p.create_user(user).await;
