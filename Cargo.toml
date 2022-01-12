@@ -17,3 +17,4 @@ mockall = { version = "0.10.2" }
 http = { version = "0.2.5" }
 futures = { version = "0.3.19" }
 tower = { version =  "0.4.11", features = ["full"] }
+routerify = { version = "3.0.0" }

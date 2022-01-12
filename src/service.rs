@@ -1,24 +1,16 @@
 use std::sync::Arc;
-use http::Request;
-use http::Response;
-use http::StatusCode;
 
 use tokio::sync::oneshot::{channel, Receiver};
 
 use hyper::Body;
 use hyper::server::Server;
-use hyper::service::service_fn;
 
-use tower::make::Shared;
+use routerify::Router;
+use routerify::RouterService;
 
 use super::persistance::DBPersistence;
-use super::models::user::User;
+use super::handlers::{Handler, GetUser, CreateUser};
 
-use uuid::Uuid;
-
-fn new_id() -> String {
-    Uuid::new_v4().to_hyphenated().to_string()
-}
 
 #[derive(Clone)]
 pub struct MySvc {
@@ -27,25 +19,18 @@ pub struct MySvc {
 
 #[allow(dead_code)]
 impl MySvc {
+    
+    pub fn router(&self) -> Router<Body, hyper::Error> {
+        // Create the handlers here
+        let get_user_hnd = GetUser::new(self.persistance.clone());
+        let create_user_hnd = CreateUser::new(self.persistance.clone());
 
-    pub async fn handle(self, _req: Request<Body>) -> Result<Response<Body>, http::Error> {
-        let resp = Response::builder().status(StatusCode::OK).body("".into()).expect("");
-
-        let user = User::new("a", "b", "c");
-        self.persistance.create_user(user).await.unwrap();
-
-        //let user = pe.get_user_by_username("andre-0125cf21-418a-4b1c-8450-2d250e37f50b").await.unwrap();
-        Ok(resp)
-    }
-
-    pub async fn create_user(&self, username: &str, email: &str) -> Result<User, String> {
-        let user = User::new(username, email, new_id().as_str());
-        let result = self.persistance.create_user(user).await;
-
-        match result {
-            Ok(user) => Ok(user),
-            Err(err) => Err(err.get_message().to_string()),
-        }
+        // hook handlers with appropriate URI
+        Router::builder()
+            .get("/:id", move |req| get_user_hnd.clone().handle(req))
+            .post("/", move |req| create_user_hnd.clone().handle(req))
+            .build()
+            .unwrap()
     }
 
     pub fn new(persistance: Box<dyn DBPersistence>) -> MySvc {
@@ -65,16 +50,11 @@ pub struct Executor {
 impl Executor {
 
     pub async fn start(self) {
-        let svc = self.svc.clone();
-
-        let make_service = Shared::new(service_fn(move |req| {
-            svc.clone().handle(req)
-        }));
-
         let addr = self.addr.as_str().parse().unwrap();
+        let service = RouterService::new(self.svc.router()).unwrap(); 
 
         let server = Server::bind(&addr)
-            .serve(make_service)
+            .serve(service)
             .with_graceful_shutdown(async {
                 self.stop_rx.await.ok();
             });
