@@ -1,7 +1,7 @@
+pub mod handlers;
 pub mod models;
 pub mod persistance;
 pub mod service;
-pub mod handlers;
 
 #[cfg(test)]
 mod persistance_test;

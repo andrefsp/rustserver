@@ -1,7 +1,7 @@
 #[test]
 pub fn test_user_init() {
     use super::user::User;
-    
+
     let u = User::new("andrefsp", "email@email.com", "32");
     assert_eq!(u.get_id(), "32");
     assert_eq!(u.get_email(), "email@email.com");

@@ -13,7 +13,7 @@ pub struct List {
 #[allow(dead_code)]
 impl List {
     pub fn new(id: &str, name: &str, user_id: &str) -> List {
-        List{
+        List {
             id: String::from(id),
             name: String::from(name),
             user_id: String::from(user_id),

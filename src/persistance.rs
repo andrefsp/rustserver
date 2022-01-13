@@ -1,10 +1,9 @@
-use std::fmt::Display;
 use std::error::Error;
-use std::fmt::{Formatter, Error as FmtError};
+use std::fmt::Display;
+use std::fmt::{Error as FmtError, Formatter};
 
-
-use sqlx::MySqlPool;
 use async_trait::async_trait;
+use sqlx::MySqlPool;
 
 use mockall::automock;
 
@@ -18,7 +17,7 @@ pub struct PersistenceError {
 #[allow(dead_code)]
 impl PersistenceError {
     pub fn new(message: &str) -> PersistenceError {
-        PersistenceError{
+        PersistenceError {
             message: String::from(message),
         }
     }
@@ -46,7 +45,6 @@ pub trait DBPersistence: Sync + Send {
     async fn migrate(&self) -> Result<(), PersistenceError>;
 }
 
-
 #[allow(dead_code)]
 #[derive(Clone)]
 pub struct Persistence {
@@ -55,7 +53,7 @@ pub struct Persistence {
 
 #[allow(dead_code)]
 impl Persistence {
-    async fn get_user_by_key(&self, key: &str, val: &str) ->  Result<User, PersistenceError> {
+    async fn get_user_by_key(&self, key: &str, val: &str) -> Result<User, PersistenceError> {
         let query = match key {
             "username" => Some("SELECT * FROM users WHERE username = ?"),
             "id" => Some("SELECT * FROM users WHERE id = ?"),
@@ -67,11 +65,11 @@ impl Persistence {
             Some(text) => {
                 let result = sqlx::query_as::<_, User>(text)
                     .bind(val)
-                    .fetch_one(&self.pool).await;
+                    .fetch_one(&self.pool)
+                    .await;
 
                 match result {
-                    Err(err) =>
-                        Err(PersistenceError::new(err.to_string().as_str())),
+                    Err(err) => Err(PersistenceError::new(err.to_string().as_str())),
                     Ok(row) => Ok(row),
                 }
             }
@@ -82,18 +80,19 @@ impl Persistence {
 #[async_trait]
 impl DBPersistence for Persistence {
     async fn create_user(&self, user: User) -> Result<User, PersistenceError> {
-        let result = sqlx::query("
+        let result = sqlx::query(
+            "
             INSERT INTO users(id, username, email) VALUES(?, ?, ?)
-        ")
-            .bind(user.get_id())
-            .bind(user.get_username())
-            .bind(user.get_email())
-            .execute(&self.pool)
-            .await;
+        ",
+        )
+        .bind(user.get_id())
+        .bind(user.get_username())
+        .bind(user.get_email())
+        .execute(&self.pool)
+        .await;
 
         match result {
-            Err(err) =>
-                Err(PersistenceError::new(err.to_string().as_str())),
+            Err(err) => Err(PersistenceError::new(err.to_string().as_str())),
             Ok(_) => Ok(user),
         }
     }
@@ -119,7 +118,7 @@ async fn get_db_pool(uri: &str) -> MySqlPool {
 
 #[allow(dead_code)]
 pub async fn new_persistence(uri: &str) -> Box<dyn DBPersistence> {
-    Box::new(Persistence{
+    Box::new(Persistence {
         pool: get_db_pool(uri).await,
     })
 }
