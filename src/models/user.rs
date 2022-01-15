@@ -5,7 +5,11 @@ use std::fmt::Error;
 use std::fmt::Formatter;
 use std::result::Result;
 
-#[derive(FromRow, Clone)]
+use serde::{Serialize, Deserialize};
+use serde_json::Result as SResult;
+
+
+#[derive(FromRow, Clone, Serialize, Deserialize)]
 pub struct User {
     username: String,
     email: String,
@@ -67,5 +71,14 @@ impl<'a> User {
 
     pub fn get_id(&self) -> &str {
         self.id.as_str()
+    }
+
+    pub fn to_json(&self) -> String { 
+        serde_json::to_string(self).unwrap()
+    }
+
+    pub fn from_json(payload: String) -> SResult<User> {
+        let user: Self = serde_json::from_str(payload.as_str())?;
+        Ok(user)
     }
 }

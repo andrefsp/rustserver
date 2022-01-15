@@ -9,7 +9,6 @@ edition = "2018"
 [dependencies]
 
 sqlx = { version = "0.5.9", features = ["runtime-tokio-rustls", "mysql"] }
-sqlx-cli = { version = "0.5.10" }
 tokio = { version = "1.14.0", features = ["full"] }
 hyper = { version = "0.14.16" , features = ["full"] }
 async-trait = { version = "0.1.51" }
@@ -19,3 +18,5 @@ http = { version = "0.2.5" }
 futures = { version = "0.3.19" }
 tower = { version =  "0.4.11", features = ["full"] }
 routerify = { version = "3.0.0" }
+serde_json = { version = "1.0.59" }
+serde = { version = "1.0.117" , features = ["derive"]}
