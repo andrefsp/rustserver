@@ -27,14 +27,18 @@ impl Handler for GetUser {
 
     async fn handle(self, req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
         let id = req.param("id").unwrap();
+        let result = self.persistance.get_user_by_username(id).await;
 
-        let user = self.persistance.get_user_by_username(id).await.unwrap();
-        
-        let resp = Response::builder()
-            .status(StatusCode::OK)
-            .body(user.to_json().into())
-            .expect("");
-
+        let resp = match result {
+            Ok(user) => Response::builder()
+                .status(StatusCode::OK)
+                .body(user.to_json().into())
+                .expect(""),
+            Err(err) => Response::builder()
+                .status(StatusCode::NOT_FOUND)
+                .body(err.get_message().into())
+                .expect(""),
+        };
         Ok(resp)
     }
 }

@@ -6,7 +6,6 @@ use std::fmt::Formatter;
 use std::result::Result;
 
 use serde::{Serialize, Deserialize};
-use serde_json::Result as SResult;
 
 
 #[derive(FromRow, Clone, Serialize, Deserialize)]
@@ -77,7 +76,7 @@ impl<'a> User {
         serde_json::to_string(self).unwrap()
     }
 
-    pub fn from_json(payload: String) -> SResult<User> {
+    pub fn from_json(payload: String) -> Result<Self, serde_json::Error> {
         let user: Self = serde_json::from_str(payload.as_str())?;
         Ok(user)
     }

@@ -1,3 +1,4 @@
+use std::str;
 use std::sync::Arc;
 
 use uuid::Uuid;
@@ -33,13 +34,31 @@ impl Handler for CreateUser {
     }
 
     async fn handle(self, req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
-        let user = User::new("username", "email", new_id().as_str());
-        self.persistance.create_user(user).await.unwrap();
+        let body = req.into_body();
+        let bytes = hyper::body::to_bytes(body).await?;
+        let payload = str::from_utf8(&bytes).unwrap().to_string();
 
-        let resp = Response::builder()
-            .status(StatusCode::OK)
-            .body("".into())
-            .expect("");
+        let object = User::from_json(payload);
+
+        if let Err(err) = object {
+            return Ok(Response::builder()
+                .status(StatusCode::BAD_REQUEST)
+                .body(format!("{}", err).into())
+                .expect(""));
+        }
+
+        let user = object.unwrap();
+
+        let resp = match self.persistance.create_user(user).await {
+            Ok(user) => Response::builder()
+                .status(StatusCode::OK)
+                .body(user.to_json().into())
+                .expect(""),
+            Err(err) => Response::builder()
+                .status(StatusCode::BAD_REQUEST)
+                .body(format!("{}", err).into())
+                .expect(""),
+        };
 
         Ok(resp)
     }

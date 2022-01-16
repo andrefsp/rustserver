@@ -22,8 +22,8 @@ impl PersistenceError {
         }
     }
 
-    pub fn get_message(&self) -> &String {
-        &self.message
+    pub fn get_message(&self) -> String {
+        self.message.clone()
     }
 }
 

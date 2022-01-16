@@ -13,13 +13,15 @@ async fn main() {
 
     let svc = MySvc::new(pe);
 
-    let (start, stop) = service::serve(svc, "127.0.0.1:3000".to_string());
+    let (start, _stop) = service::serve(svc, "127.0.0.1:3000".to_string());
 
+    /*
     tokio::spawn(async {
         let timeout = Duration::new(15, 0);
         sleep(timeout).await;
         stop();
     });
+    */
 
     start.start().await;
 }
