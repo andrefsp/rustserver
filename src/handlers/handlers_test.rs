@@ -1,5 +1,8 @@
 use std::sync::Arc;
+
 use http::Request;
+
+use super::super::models::user::User;
 use super::Handler;
 
 #[tokio::test]
@@ -16,7 +19,9 @@ async fn test_create_user_uses_persistence() {
     let p = Box::new(persistance);
     let hnd = super::CreateUser::new(Arc::new(p));
 
-    let req = Request::builder().body("".into()).unwrap();
+    let user = User::new("username", "email@email.com", "someid");
+
+    let req = Request::builder().body(user.to_json().into()).unwrap();
     let result = hnd.handle(req).await;
 
     assert!(result.is_ok());

@@ -8,7 +8,7 @@ use hyper::Body;
 use routerify::Router;
 use routerify::RouterService;
 
-use super::handlers::{CreateUser, GetUser, Handler};
+use super::handlers::{CreateUser, GetUser, Handler, Socket};
 use super::persistance::DBPersistence;
 
 #[derive(Clone)]
@@ -22,11 +22,13 @@ impl MySvc {
         // Create the handlers here
         let get_user_hnd = GetUser::new(self.persistance.clone());
         let create_user_hnd = CreateUser::new(self.persistance.clone());
+        let socket = Socket::new(self.persistance.clone());
 
         // hook handlers with appropriate URI
         Router::builder()
             .get("/:id", move |req| get_user_hnd.clone().handle(req))
             .post("/", move |req| create_user_hnd.clone().handle(req))
+            .any_method("/ws", move |req| socket.clone().handle(req))
             .build()
             .unwrap()
     }
