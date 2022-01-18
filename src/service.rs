@@ -26,8 +26,8 @@ impl MySvc {
 
         // hook handlers with appropriate URI
         Router::builder()
-            .get("/:id", move |req| get_user_hnd.clone().handle(req))
-            .post("/", move |req| create_user_hnd.clone().handle(req))
+            .get("/users/:id", move |req| get_user_hnd.clone().handle(req))
+            .post("/users/", move |req| create_user_hnd.clone().handle(req))
             .any_method("/ws", move |req| socket.clone().handle(req))
             .build()
             .unwrap()

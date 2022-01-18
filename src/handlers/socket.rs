@@ -1,15 +1,15 @@
-use std::sync::Arc;
-
 use async_trait::async_trait;
-
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use futures::{sink::SinkExt, stream::StreamExt};
+use std::sync::Arc;
 
 use http::Request;
 use http::Response;
 use http::StatusCode;
 
-use hyper::upgrade::Upgraded;
 use hyper::Body;
+
+use hyper_tungstenite::{tungstenite, HyperWebsocket};
+use tungstenite::Message;
 
 use super::super::persistance::DBPersistence;
 use super::Handler;
@@ -20,16 +20,19 @@ pub struct Socket {
 }
 
 impl Socket {
-    pub async fn ws_handle(self, mut upgraded: Upgraded) -> Result<(), std::io::Error> {
+    pub async fn ws_handle(self, ws: HyperWebsocket) -> Result<(), tungstenite::Error> {
+        let mut ws = ws.await?;
+
         loop {
-            let mut payload = String::default();
-            if let Err(err) = upgraded.read_to_string(&mut payload).await {
-                return Err(err);
+            let message = ws.next().await;
+            if message.is_none() {
+                return Ok(());
             }
 
-            if let Err(err) = upgraded.write(payload.as_bytes()).await {
-                return Err(err);
-            }
+            let message = message.unwrap()?;
+
+            let echo_msg = format!("> '{}'", message);
+            ws.send(Message::text(echo_msg)).await?;
         }
     }
 }
@@ -42,29 +45,25 @@ impl Handler for Socket {
         Socket { persistance }
     }
 
-    async fn handle(self, mut req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
-        if !req.headers().contains_key(hyper::header::UPGRADE) {
+    async fn handle(self, req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
+        if !hyper_tungstenite::is_upgrade_request(&req) {
             return Ok(Response::builder()
                 .status(StatusCode::BAD_REQUEST)
                 .body("".into())
                 .unwrap());
         }
 
-        tokio::task::spawn(async move {
-            match hyper::upgrade::on(&mut req).await {
-                Ok(upgraded) => {
-                    if let Err(err) = self.ws_handle(upgraded).await {
-                        eprintln!("server foobar io error: {}", err)
-                    };
-                }
-                Err(e) => eprintln!("upgrade error: {}", e),
-            }
-        });
+        let upgrade = hyper_tungstenite::upgrade(req, None);
+        if let Err(err) = upgrade {
+            return Ok(Response::builder()
+                .status(StatusCode::INTERNAL_SERVER_ERROR)
+                .body(format!("{}", err).into())
+                .unwrap());
+        }
 
-        Ok(Response::builder()
-            .status(StatusCode::SWITCHING_PROTOCOLS)
-            .header("", "")
-            .body("".into())
-            .unwrap())
+        let (resp, ws) = upgrade.unwrap();
+
+        tokio::spawn(async move { self.ws_handle(ws).await });
+        Ok(resp)
     }
 }
