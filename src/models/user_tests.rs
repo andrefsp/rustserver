@@ -24,3 +24,12 @@ pub fn test_user_list() {
     assert_eq!(v[1].get_id(), "32");
     assert_eq!(v[2].get_id(), "33");
 }
+
+#[test]
+pub fn test_user_from() {
+    use super::user::User;
+
+    let u = User::new("andrefsp", "email@email.com", "32");
+
+    assert!(!u.eq(&"".to_string().into()));
+}

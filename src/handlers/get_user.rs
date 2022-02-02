@@ -17,14 +17,14 @@ pub struct GetUser {
     persistance: Arc<Box<dyn DBPersistence>>,
 }
 
-#[async_trait]
-impl Handler for GetUser {
-    type Target = Self;
-
-    fn new(persistance: Arc<Box<dyn DBPersistence>>) -> Self::Target {
+impl GetUser {
+    pub fn new(persistance: Arc<Box<dyn DBPersistence>>) -> Self {
         GetUser { persistance }
     }
+}
 
+#[async_trait]
+impl Handler for GetUser {
     async fn handle(self, req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
         let id = req.param("id").unwrap();
         let result = self.persistance.get_user_by_username(id).await;

@@ -11,6 +11,34 @@ use routerify::RouterService;
 use super::handlers::{CreateUser, GetUser, Handler, Socket};
 use super::persistance::DBPersistence;
 
+// router macro avoids repeating loads of boilerplate code related with
+// cloning an handler and wiring it with the router methods
+macro_rules! router {
+    (
+        $(
+            ($method:expr, $path:expr, $hnd:expr),
+        )
+        *
+    ) => {{
+        let r = Router::builder();
+
+        $(
+            let r = match $method {
+                "GET" => r.get($path, move |req| $hnd.clone().handle(req)),
+                "POST" => r.post($path, move |req| $hnd.clone().handle(req)),
+                "DELETE" => r.delete($path, move |req| $hnd.clone().handle(req)),
+                "PUT" => r.put($path, move |req| $hnd.clone().handle(req)),
+                "PATCH" => r.patch($path, move |req| $hnd.clone().handle(req)),
+                "OPTIONS" => r.options($path, move |req| $hnd.clone().handle(req)),
+                "TRACE" => r.trace($path, move |req| $hnd.clone().handle(req)),
+                _ => r.any_method($path, move |req| $hnd.clone().handle(req)),
+            };
+        )*
+
+        r.build().unwrap()
+    }};
+}
+
 #[derive(Clone)]
 pub struct MySvc {
     persistance: Arc<Box<dyn DBPersistence>>,
@@ -20,17 +48,15 @@ pub struct MySvc {
 impl MySvc {
     pub fn router(&self) -> Router<Body, hyper::Error> {
         // Create the handlers here
-        let get_user_hnd = GetUser::new(self.persistance.clone());
-        let create_user_hnd = CreateUser::new(self.persistance.clone());
+        let get_user = GetUser::new(self.persistance.clone());
+        let create_user = CreateUser::new(self.persistance.clone());
         let socket = Socket::new(self.persistance.clone());
 
-        // hook handlers with appropriate URI
-        Router::builder()
-            .get("/users/:id", move |req| get_user_hnd.clone().handle(req))
-            .post("/users/", move |req| create_user_hnd.clone().handle(req))
-            .any_method("/ws", move |req| socket.clone().handle(req))
-            .build()
-            .unwrap()
+        router!(
+            ("GET", "/users/:id", get_user),
+            ("POST", "/users", create_user),
+            ("*", "/ws", socket),
+        )
     }
 
     pub fn new(persistance: Box<dyn DBPersistence>) -> MySvc {

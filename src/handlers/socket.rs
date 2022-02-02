@@ -20,6 +20,10 @@ pub struct Socket {
 }
 
 impl Socket {
+    pub fn new(persistance: Arc<Box<dyn DBPersistence>>) -> Self {
+        Socket { persistance }
+    }
+
     pub async fn ws_handle(self, ws: HyperWebsocket) -> Result<(), tungstenite::Error> {
         let mut ws = ws.await?;
 
@@ -39,12 +43,6 @@ impl Socket {
 
 #[async_trait]
 impl Handler for Socket {
-    type Target = Self;
-
-    fn new(persistance: Arc<Box<dyn DBPersistence>>) -> Self::Target {
-        Socket { persistance }
-    }
-
     async fn handle(self, req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
         if !hyper_tungstenite::is_upgrade_request(&req) {
             return Ok(Response::builder()

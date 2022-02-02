@@ -1,18 +1,28 @@
 use sqlx::FromRow;
 use std::cmp::{Eq, Ord, Ordering, PartialEq, PartialOrd};
+use std::convert::From;
 use std::fmt::Display;
 use std::fmt::Error;
 use std::fmt::Formatter;
 use std::result::Result;
 
-use serde::{Serialize, Deserialize};
-
+use serde::{Deserialize, Serialize};
 
 #[derive(FromRow, Clone, Serialize, Deserialize)]
 pub struct User {
     username: String,
     email: String,
     id: String,
+}
+
+impl From<String> for User {
+    fn from(_user_payload: String) -> User {
+        User {
+            username: "from".to_string(),
+            email: "from@email.com".to_string(),
+            id: "from_id".to_string(),
+        }
+    }
 }
 
 impl Display for User {
@@ -72,7 +82,7 @@ impl<'a> User {
         self.id.as_str()
     }
 
-    pub fn to_json(&self) -> String { 
+    pub fn to_json(&self) -> String {
         serde_json::to_string(self).unwrap()
     }
 

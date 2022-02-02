@@ -25,14 +25,14 @@ pub struct CreateUser {
     persistance: Arc<Box<dyn DBPersistence>>,
 }
 
-#[async_trait]
-impl Handler for CreateUser {
-    type Target = Self;
-
-    fn new(persistance: Arc<Box<dyn DBPersistence>>) -> Self::Target {
+impl CreateUser {
+    pub fn new(persistance: Arc<Box<dyn DBPersistence>>) -> Self {
         CreateUser { persistance }
     }
+}
 
+#[async_trait]
+impl Handler for CreateUser {
     async fn handle(self, req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
         let body = req.into_body();
         let bytes = hyper::body::to_bytes(body).await?;
