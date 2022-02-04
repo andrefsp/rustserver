@@ -1,5 +1,4 @@
 use std::sync::Arc;
-
 use tokio::sync::oneshot::{channel, Receiver};
 
 use hyper::server::Server;
@@ -74,6 +73,7 @@ pub struct Executor {
 
 impl Executor {
     pub async fn start(self) {
+        log::info!("initiating service:: {}", self.addr.clone());
         let addr = self.addr.as_str().parse().unwrap();
         let service = RouterService::new(self.svc.router()).unwrap();
 
