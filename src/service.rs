@@ -10,6 +10,14 @@ use routerify::RouterService;
 use super::handlers::{CreateUser, GetUser, Handler, Socket};
 use super::persistance::DBPersistence;
 
+// route handler turns the handler into the appropriate closuse
+// to be given to the routerify router
+macro_rules! route_handler {
+    ($hnd:expr) => {
+        move |req| $hnd.clone().handle(req)
+    };
+}
+
 // router macro avoids repeating loads of boilerplate code related with
 // cloning an handler and wiring it with the router methods
 macro_rules! router {
@@ -20,20 +28,18 @@ macro_rules! router {
         *
     ) => {{
         let r = Router::builder();
-
         $(
             let r = match $method {
-                "GET" => r.get($path, move |req| $hnd.clone().handle(req)),
-                "POST" => r.post($path, move |req| $hnd.clone().handle(req)),
-                "DELETE" => r.delete($path, move |req| $hnd.clone().handle(req)),
-                "PUT" => r.put($path, move |req| $hnd.clone().handle(req)),
-                "PATCH" => r.patch($path, move |req| $hnd.clone().handle(req)),
-                "OPTIONS" => r.options($path, move |req| $hnd.clone().handle(req)),
-                "TRACE" => r.trace($path, move |req| $hnd.clone().handle(req)),
-                _ => r.any_method($path, move |req| $hnd.clone().handle(req)),
+                "GET" => r.get($path, route_handler!($hnd)),
+                "POST" => r.post($path, route_handler!($hnd)),
+                "DELETE" => r.delete($path, route_handler!($hnd)),
+                "PUT" => r.put($path, route_handler!($hnd)),
+                "PATCH" => r.patch($path, route_handler!($hnd)),
+                "OPTIONS" => r.options($path, route_handler!($hnd)),
+                "TRACE" => r.trace($path, route_handler!($hnd)),
+                _ => r.any_method($path, route_handler!($hnd)),
             };
         )*
-
         r.build().unwrap()
     }};
 }
