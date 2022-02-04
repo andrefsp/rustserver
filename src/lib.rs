@@ -8,3 +8,6 @@ mod persistance_test;
 
 #[cfg(test)]
 mod service_test;
+
+#[cfg(test)]
+mod test;
