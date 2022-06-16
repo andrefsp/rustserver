@@ -1,6 +1,9 @@
 use super::service::serve;
 use super::service::MySvc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use tokio::net::TcpStream;
+
+static PORT: AtomicUsize = AtomicUsize::new(4000);
 
 pub struct HttpTestServer {
     addr: String,
@@ -13,11 +16,12 @@ impl HttpTestServer {
     }
 
     fn pick_addr() -> String {
-        "127.0.0.1:4000".into()
+        let x = PORT.fetch_add(1, Ordering::SeqCst);
+        format!("127.0.0.1:{}", x).into()
     }
 
-    pub fn url(&self) -> String {
-        format!("http://{}", self.addr)
+    pub fn addr(&self) -> String {
+        format!("{}", self.addr)
     }
 
     pub async fn new(svc: MySvc) -> Result<Self, std::io::Error> {

@@ -80,16 +80,12 @@ impl Persistence {
 #[async_trait]
 impl DBPersistence for Persistence {
     async fn create_user(&self, user: User) -> Result<User, PersistenceError> {
-        let result = sqlx::query(
-            "
-            INSERT INTO users(id, username, email) VALUES(?, ?, ?)
-        ",
-        )
-        .bind(user.get_id())
-        .bind(user.get_username())
-        .bind(user.get_email())
-        .execute(&self.pool)
-        .await;
+        let result = sqlx::query("INSERT INTO users(id, username, email) VALUES(?, ?, ?)")
+            .bind(user.get_id())
+            .bind(user.get_username())
+            .bind(user.get_email())
+            .execute(&self.pool)
+            .await;
 
         match result {
             Err(err) => Err(PersistenceError::new(err.to_string().as_str())),
