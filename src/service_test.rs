@@ -8,7 +8,6 @@ use tokio_tungstenite::connect_async;
 #[tokio::test]
 async fn test_service_response() {
     let persistance = MockDBPersistence::default();
-
     let svc = MySvc::new(Box::new(persistance));
 
     let result = HttpTestServer::new(svc).await;
@@ -33,14 +32,14 @@ async fn test_service_response() {
 #[tokio::test]
 async fn test_ws_connect_and_echo() {
     let persistance = MockDBPersistence::default();
-
     let svc = MySvc::new(Box::new(persistance));
+
     let result = HttpTestServer::new(svc).await;
     assert!(result.is_ok());
 
     let ts = result.unwrap();
 
-    let uri: String = format!("ws://{}/ws", ts.addr()).parse().unwrap();
+    let uri = format!("ws://{}/ws", ts.addr());
 
     let conn = connect_async(uri).await;
     assert!(conn.is_ok());
