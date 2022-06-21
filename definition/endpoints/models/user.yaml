@@ -1,0 +1,10 @@
+title: User
+description: An User object
+type: object
+properties:
+  id:
+    type: string
+  email:
+    type: string
+  username:
+    type: string
