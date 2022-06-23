@@ -7,7 +7,6 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-
 sqlx = { version = "0.5.9", features = ["runtime-tokio-rustls", "mysql"] }
 tokio = { version = "1.14.0", features = ["full"] }
 tokio-tungstenite = "0.17.1"
@@ -23,3 +22,12 @@ routerify = { version = "3.0.0" }
 serde_json = { version = "1.0.59" }
 serde = { version = "1.0.117" , features = ["derive"]}
 log = { version = "0.4.14" }
+
+openapi_client = { path = "./openapi", features = ["server"] }
+swagger = { version = "6.1", features = ["serdejson", "server", "client", "tls", "tcp"] }
+
+[workspace]
+
+members = [
+    "openapi",
+]

@@ -10,6 +10,8 @@ use routerify::RouterService;
 use super::handlers::{CreateUser, GetUser, Handler, Socket};
 use super::persistance::DBPersistence;
 
+use openapi_client::Api;
+
 // route handler turns the handler into the appropriate closuse
 // to be given to the routerify router
 macro_rules! route_handler {

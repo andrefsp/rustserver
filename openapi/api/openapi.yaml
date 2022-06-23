@@ -1,0 +1,51 @@
+openapi: 3.0.0
+info:
+  description: "This is a sample server Petstore server. For this sample, you can\
+    \ use the api key `special-key` to test the authorization filters."
+  title: OpenAPI Petstore
+  version: 1.0.0
+servers:
+- url: http://petstore.swagger.io/v2
+tags:
+- description: Operations about user
+  name: user
+paths:
+  /user:
+    post:
+      description: ""
+      operationId: createUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/user'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user'
+          description: successful operation
+        default:
+          description: error
+      summary: Add a new user to the store
+      tags:
+      - user
+components:
+  schemas:
+    user:
+      description: An User object
+      example:
+        id: id
+        email: email
+        username: username
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        username:
+          type: string
+      title: User
+      type: object
+
