@@ -1,5 +1,4 @@
 title: Task
-description: An User object
 type: object
 properties:
   id:

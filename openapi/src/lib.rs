@@ -1,19 +1,11 @@
-#![allow(
-    missing_docs,
-    trivial_casts,
-    unused_variables,
-    unused_mut,
-    unused_imports,
-    unused_extern_crates,
-    non_camel_case_types
-)]
+#![allow(missing_docs, trivial_casts, unused_variables, unused_mut, unused_imports, unused_extern_crates, non_camel_case_types)]
 
 use async_trait::async_trait;
 use futures::Stream;
-use serde::{Deserialize, Serialize};
 use std::error::Error;
-use std::task::{Context, Poll};
+use std::task::{Poll, Context};
 use swagger::{ApiError, ContextWrapper};
+use serde::{Serialize, Deserialize};
 
 type ServiceError = Box<dyn Error + Send + Sync + 'static>;
 
@@ -24,48 +16,46 @@ pub const API_VERSION: &'static str = "1.0.0";
 #[must_use]
 pub enum CreateUserResponse {
     /// successful operation
-    SuccessfulOperation(models::User),
+    SuccessfulOperation
+    (serde_json::Value)
+    ,
     /// error
-    Error,
+    Error
 }
 
 /// API
 #[async_trait]
 pub trait Api<C: Send + Sync> {
-    fn poll_ready(
-        &self,
-        _cx: &mut Context,
-    ) -> Poll<Result<(), Box<dyn Error + Send + Sync + 'static>>> {
+    fn poll_ready(&self, _cx: &mut Context) -> Poll<Result<(), Box<dyn Error + Send + Sync + 'static>>> {
         Poll::Ready(Ok(()))
     }
 
     /// Add a new user to the store
     async fn create_user(
         &self,
-        user: Option<models::User>,
-        context: &C,
-    ) -> Result<CreateUserResponse, ApiError>;
+        create_user_request: Option<models::CreateUserRequest>,
+        context: &C) -> Result<CreateUserResponse, ApiError>;
+
 }
 
 /// API where `Context` isn't passed on every API call
 #[async_trait]
 pub trait ApiNoContext<C: Send + Sync> {
-    fn poll_ready(
-        &self,
-        _cx: &mut Context,
-    ) -> Poll<Result<(), Box<dyn Error + Send + Sync + 'static>>>;
+
+    fn poll_ready(&self, _cx: &mut Context) -> Poll<Result<(), Box<dyn Error + Send + Sync + 'static>>>;
 
     fn context(&self) -> &C;
 
     /// Add a new user to the store
-    async fn create_user(&self, user: Option<models::User>)
-        -> Result<CreateUserResponse, ApiError>;
+    async fn create_user(
+        &self,
+        create_user_request: Option<models::CreateUserRequest>,
+        ) -> Result<CreateUserResponse, ApiError>;
+
 }
 
 /// Trait to extend an API to make it easy to bind it to a context.
-pub trait ContextWrapperExt<C: Send + Sync>
-where
-    Self: Sized,
+pub trait ContextWrapperExt<C: Send + Sync> where Self: Sized
 {
     /// Binds this API to a context.
     fn with_context(self: Self, context: C) -> ContextWrapper<Self, C>;
@@ -73,7 +63,7 @@ where
 
 impl<T: Api<C> + Send + Sync, C: Clone + Send + Sync> ContextWrapperExt<C> for T {
     fn with_context(self: T, context: C) -> ContextWrapper<T, C> {
-        ContextWrapper::<T, C>::new(self, context)
+         ContextWrapper::<T, C>::new(self, context)
     }
 }
 
@@ -90,12 +80,15 @@ impl<T: Api<C> + Send + Sync, C: Clone + Send + Sync> ApiNoContext<C> for Contex
     /// Add a new user to the store
     async fn create_user(
         &self,
-        user: Option<models::User>,
-    ) -> Result<CreateUserResponse, ApiError> {
+        create_user_request: Option<models::CreateUserRequest>,
+        ) -> Result<CreateUserResponse, ApiError>
+    {
         let context = self.context().clone();
-        self.api().create_user(user, &context).await
+        self.api().create_user(create_user_request, &context).await
     }
+
 }
+
 
 #[cfg(feature = "client")]
 pub mod client;

@@ -1,4 +1,4 @@
-//! Main library entry point for openapi_client implementation.
+//! Main library entry point for openapi implementation.
 
 #![allow(unused_imports)]
 
@@ -20,7 +20,7 @@ use tokio::net::TcpListener;
 #[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "ios")))]
 use openssl::ssl::{Ssl, SslAcceptor, SslAcceptorBuilder, SslFiletype, SslMethod};
 
-use openapi_client::models;
+use openapi::models;
 
 /// Builds an SSL implementation for Simple HTTPS from some hard-coded file names
 pub async fn create(addr: &str, https: bool) {
@@ -33,7 +33,7 @@ pub async fn create(addr: &str, https: bool) {
     let service = MakeAllowAllAuthenticator::new(service, "cosmo");
 
     let mut service =
-        openapi_client::server::context::MakeAddContext::<_, EmptyContext>::new(
+        openapi::server::context::MakeAddContext::<_, EmptyContext>::new(
             service
         );
 
@@ -91,11 +91,11 @@ impl<C> Server<C> {
 }
 
 
-use openapi_client::{
+use openapi::{
     Api,
     CreateUserResponse,
 };
-use openapi_client::server::MakeService;
+use openapi::server::MakeService;
 use std::error::Error;
 use swagger::ApiError;
 
@@ -105,11 +105,11 @@ impl<C> Api<C> for Server<C> where C: Has<XSpanIdString> + Send + Sync
     /// Add a new user to the store
     async fn create_user(
         &self,
-        user: Option<models::User>,
+        create_user_request: Option<models::CreateUserRequest>,
         context: &C) -> Result<CreateUserResponse, ApiError>
     {
         let context = context.clone();
-        info!("create_user({:?}) - X-Span-ID: {:?}", user, context.get().0.clone());
+        info!("create_user({:?}) - X-Span-ID: {:?}", create_user_request, context.get().0.clone());
         Err(ApiError("Generic failure".into()))
     }
 

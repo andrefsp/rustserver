@@ -1,4 +1,5 @@
-use openapi_client::server::MakeService;
+use openapi::server::MakeService;
+use std::sync::Arc;
 
 use swagger::auth::MakeAllowAllAuthenticator;
 use swagger::EmptyContext;
@@ -8,7 +9,7 @@ use rustserver::persistance::new_persistence;
 use rustserver::service;
 use rustserver::service::MySvc;
 
-use rustserver::api::MyApi;
+use rustserver::api::{MakeMyAuth, MyApi};
 
 const DB_URI: &str = "mysql://root@localhost:3306/testdb?parseTime=true&charset=utf8mb4";
 
@@ -32,11 +33,14 @@ async fn main() {
 
     let pe = new_persistence(DB_URI).await;
 
+    let auth_pe = new_persistence(DB_URI).await;
+
     let api = MyApi::new(pe);
 
     let service = MakeService::new(api);
-    let service = MakeAllowAllAuthenticator::new(service, "cosmo");
-    let service = openapi_client::server::context::MakeAddContext::<_, EmptyContext>::new(service);
+    //let service = MakeAllowAllAuthenticator::new(service, "cosmo");
+    let service = MakeMyAuth::new(service, Arc::new(auth_pe));
+    let service = openapi::server::context::MakeAddContext::<_, EmptyContext>::new(service);
 
     let addr = "127.0.0.1:3000"
         .parse()

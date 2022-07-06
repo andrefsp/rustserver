@@ -13,3 +13,20 @@ tags:
 paths:
   /user:
     $ref: './endpoints/users.yaml'
+
+components:
+  securitySchemes:
+    api_key:
+      type: http
+      scheme: bearer
+      name: Authorization
+      in: header
+
+    user_write:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: 'https://auth.some.com/oauth2/token'
+          scopes:
+            'write:users': modify pets in your account
+            'read:users': read your pets

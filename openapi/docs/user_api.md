@@ -8,7 +8,7 @@ Method | HTTP request | Description
 
 
 # **createUser**
-> models::User createUser(optional)
+> serde_json::Value createUser(ctx, optional)
 Add a new user to the store
 
 
@@ -17,6 +17,7 @@ Add a new user to the store
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
+ **ctx** | **context.Context** | context containing the authentication | nil if no authentication
  **optional** | **map[string]interface{}** | optional parameters | nil if no parameters
 
 ### Optional Parameters
@@ -24,15 +25,15 @@ Optional parameters are passed through a map[string]interface{}.
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **user** | [**User**](User.md)|  | 
+ **create_user_request** | [**CreateUserRequest**](CreateUserRequest.md)|  | 
 
 ### Return type
 
-[**models::User**](user.md)
+[**serde_json::Value**](object.md)
 
 ### Authorization
 
-No authorization required
+[user_write](../README.md#user_write)
 
 ### HTTP request headers
 

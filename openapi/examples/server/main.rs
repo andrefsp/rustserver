@@ -1,4 +1,4 @@
-//! Main binary entry point for openapi_client implementation.
+//! Main binary entry point for openapi implementation.
 
 #![allow(missing_docs)]
 

@@ -1,0 +1,12 @@
+title: CreateUserRequest
+type: object
+properties:
+  type:
+    enum:
+      - user
+      - task
+    default: user
+  user:
+    $ref: './user.yaml'
+  task:
+    $ref: './task.yaml'

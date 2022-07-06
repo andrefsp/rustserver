@@ -1,20 +1,25 @@
 post:
   tags:
     - user
+  security:
+    - user_write:
+      - 'write:users'
+      - 'read:users'
   summary: Add a new user to the store
   description: ''
   operationId: createUser
+  requestBody:
+    content:
+      application/json:
+        schema:
+          $ref: './models/create_user_request.yaml'
   responses:
     200:
       description: successful operation
       content:
         application/json:
           schema:
-            $ref: './models/user.yaml'
+            $ref: './models/create_user_response.yaml'
     default:
       description: error
-  requestBody:
-    content:
-      application/json:
-        schema:
-          $ref: './models/user.yaml'
+          

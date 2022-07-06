@@ -4,6 +4,8 @@
 Cargo.toml
 README.md
 api/openapi.yaml
+docs/CreateUserRequest.md
+docs/Task.md
 docs/User.md
 docs/user_api.md
 examples/ca.pem

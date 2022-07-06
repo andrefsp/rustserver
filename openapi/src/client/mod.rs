@@ -370,7 +370,7 @@ impl<S, C> Api<C> for Client<S, C> where
        Response=Response<Body>> + Clone + Sync + Send + 'static,
     S::Future: Send + 'static,
     S::Error: Into<crate::ServiceError> + fmt::Display,
-    C: Has<XSpanIdString>  + Clone + Send + Sync + 'static,
+    C: Has<XSpanIdString> + Has<Option<AuthData>> + Clone + Send + Sync + 'static,
 {
     fn poll_ready(&self, cx: &mut Context) -> Poll<Result<(), crate::ServiceError>> {
         match self.client_service.clone().poll_ready(cx) {
@@ -382,7 +382,7 @@ impl<S, C> Api<C> for Client<S, C> where
 
     async fn create_user(
         &self,
-        param_user: Option<models::User>,
+        param_create_user_request: Option<models::CreateUserRequest>,
         context: &C) -> Result<CreateUserResponse, ApiError>
     {
         let mut client_service = self.client_service.clone();
@@ -415,7 +415,7 @@ impl<S, C> Api<C> for Client<S, C> where
         };
 
         // Body parameter
-        let body = param_user.map(|ref body| {
+        let body = param_create_user_request.map(|ref body| {
             serde_json::to_string(body).expect("impossible to fail to serialize")
         });
 
@@ -435,6 +435,23 @@ impl<S, C> Api<C> for Client<S, C> where
             Err(e) => return Err(ApiError(format!("Unable to create X-Span ID header value: {}", e)))
         });
 
+        if let Some(auth_data) = Has::<Option<AuthData>>::get(context).as_ref() {
+            // Currently only authentication with Basic and Bearer are supported
+            match auth_data {
+                &AuthData::Bearer(ref bearer_header) => {
+                    let auth = swagger::auth::Header(bearer_header.clone());
+                    let header = match HeaderValue::from_str(&format!("{}", auth)) {
+                        Ok(h) => h,
+                        Err(e) => return Err(ApiError(format!("Unable to create Authorization header: {}", e)))
+                    };
+                    request.headers_mut().insert(
+                        hyper::header::AUTHORIZATION,
+                        header);
+                },
+                _ => {}
+            }
+        }
+
         let mut response = client_service.call((request, context.clone()))
             .map_err(|e| ApiError(format!("No response received: {}", e))).await?;
 
@@ -446,7 +463,7 @@ impl<S, C> Api<C> for Client<S, C> where
                         .map_err(|e| ApiError(format!("Failed to read response: {}", e))).await?;
                 let body = str::from_utf8(&body)
                     .map_err(|e| ApiError(format!("Response was not valid UTF8: {}", e)))?;
-                let body = serde_json::from_str::<models::User>(body).map_err(|e| {
+                let body = serde_json::from_str::<serde_json::Value>(body).map_err(|e| {
                     ApiError(format!("Response body did not match the schema: {}", e))
                 })?;
                 Ok(CreateUserResponse::SuccessfulOperation

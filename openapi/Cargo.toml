@@ -1,5 +1,5 @@
 [package]
-name = "openapi_client"
+name = "openapi"
 version = "1.0.0"
 authors = []
 description = "This is a sample server Petstore server. For this sample, you can use the api key `special-key` to test the authorization filters."

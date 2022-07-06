@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   description: "This is a sample server Petstore server. For this sample, you can\
     \ use the api key `special-key` to test the authorization filters."
-  title: OpenAPI Petstore
+  title: OpenAPI
   version: 1.0.0
 servers:
 - url: http://petstore.swagger.io/v2
@@ -18,27 +18,43 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/user'
+              $ref: '#/components/schemas/create_user_request'
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/user'
+                $ref: '#/components/schemas/create_user_response'
           description: successful operation
         default:
           description: error
+      security:
+      - user_write:
+        - write:users
+        - read:users
       summary: Add a new user to the store
       tags:
       - user
 components:
   schemas:
+    create_user_request:
+      properties:
+        type:
+          default: user
+          enum:
+          - user
+          - task
+          type: object
+        user:
+          $ref: '#/components/schemas/user'
+        task:
+          $ref: '#/components/schemas/task'
+      title: CreateUserRequest
+      type: object
+    create_user_response:
+      title: CreateUserResponse
+      type: object
     user:
-      description: An User object
-      example:
-        id: id
-        email: email
-        username: username
       properties:
         id:
           type: string
@@ -48,4 +64,28 @@ components:
           type: string
       title: User
       type: object
+    task:
+      properties:
+        id:
+          type: integer
+        description:
+          type: string
+        epic:
+          type: string
+      title: Task
+      type: object
+  securitySchemes:
+    api_key:
+      in: header
+      name: Authorization
+      scheme: bearer
+      type: http
+    user_write:
+      flows:
+        clientCredentials:
+          scopes:
+            write:users: modify pets in your account
+            read:users: read your pets
+          tokenUrl: https://auth.some.com/oauth2/token
+      type: oauth2
 
