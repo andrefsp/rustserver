@@ -1,3 +1,4 @@
+use std::collections::BTreeSet;
 use std::marker::PhantomData;
 use std::sync::Arc;
 use std::task::Context;
@@ -114,7 +115,10 @@ where
         let (request, context) = req;
         let context = context.push(Some(Authorization {
             subject: "".into(),
-            scopes: Scopes::All,
+            scopes: Scopes::Some(BTreeSet::from([
+                "write:users".to_string(),
+                "read:users".to_string(),
+            ])),
             issuer: None,
         }));
 
@@ -140,7 +144,7 @@ impl<C> MyApi<C> {
 #[async_trait]
 impl<C> Api<C> for MyApi<C>
 where
-    C: Has<XSpanIdString> + Send + Sync,
+    C: Has<XSpanIdString> + Has<Option<Authorization>> + Send + Sync,
 {
     /// Add a new user to the store
     async fn create_user(
