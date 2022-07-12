@@ -3,11 +3,13 @@ use tokio::sync::oneshot::{channel, Receiver};
 use hyper::server::Server;
 use hyper::Body;
 
+use routerify::Middleware;
 use routerify::Router;
 use routerify::RouterService;
 
 use super::context::Deps;
 use super::handlers::{CreateUser, GetUser, Handler, Socket};
+use super::middleware;
 
 // route handler turns the handler into the appropriate closuse
 // to be given to the routerify router
@@ -26,7 +28,7 @@ macro_rules! router {
         )
         *
     ) => {{
-        let r = Router::builder();
+        let r = Router::builder().middleware(Middleware::pre(middleware::logger));
         $(
             let r = match $method {
                 "GET" => r.get($path, route_handler!($hnd)),

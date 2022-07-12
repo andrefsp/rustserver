@@ -1,6 +1,7 @@
 pub mod context;
 pub mod handlers;
 pub mod logger;
+pub mod middleware;
 pub mod models;
 pub mod persistance;
 pub mod service;
