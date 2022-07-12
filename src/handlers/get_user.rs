@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use http::Request;
 use http::Response;
 use http::StatusCode;
@@ -9,17 +7,17 @@ use async_trait::async_trait;
 use hyper::Body;
 use routerify::ext::RequestExt;
 
-use super::super::persistance::DBPersistence;
+use super::super::context::Deps;
 use super::handlers::Handler;
 
 #[derive(Clone)]
 pub struct GetUser {
-    persistance: Arc<Box<dyn DBPersistence>>,
+    deps: Deps,
 }
 
 impl GetUser {
-    pub fn new(persistance: Arc<Box<dyn DBPersistence>>) -> Self {
-        GetUser { persistance }
+    pub fn new(deps: Deps) -> Self {
+        GetUser { deps }
     }
 }
 
@@ -27,7 +25,14 @@ impl GetUser {
 impl Handler for GetUser {
     async fn handle(self, req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
         let id = req.param("id").unwrap();
-        let result = self.persistance.get_user_by_username(id).await;
+        let result = self.deps.persistance.get_user_by_username(id).await;
+
+        if let Err(_) = self.deps.worker_tx.send("this the payload".into()).await {
+            return Ok(Response::builder()
+                .status(StatusCode::INTERNAL_SERVER_ERROR)
+                .body(Body::empty())
+                .expect(""));
+        };
 
         let resp = match result {
             Ok(user) => Response::builder()

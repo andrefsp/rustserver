@@ -1,6 +1,8 @@
+use super::context::Deps;
 use super::persistance::MockDBPersistence;
 use super::service::MySvc;
 use super::test::HttpTestServer;
+use super::worker;
 use futures::sink::SinkExt;
 use futures::stream::StreamExt;
 use tokio_tungstenite::connect_async;
@@ -8,7 +10,10 @@ use tokio_tungstenite::connect_async;
 #[tokio::test]
 async fn test_service_response() {
     let persistance = MockDBPersistence::default();
-    let svc = MySvc::new(Box::new(persistance));
+    let (_worker, tx, _stop) = worker::new(Box::new(|m: worker::WorkerTask| {}));
+    let deps = Deps::new(Box::new(persistance), tx);
+
+    let svc = MySvc::new(deps);
 
     let result = HttpTestServer::new(svc).await;
     assert!(result.is_ok());
@@ -32,7 +37,11 @@ async fn test_service_response() {
 #[tokio::test]
 async fn test_ws_connect_and_echo() {
     let persistance = MockDBPersistence::default();
-    let svc = MySvc::new(Box::new(persistance));
+
+    let (_worker, tx, _stop) = worker::new(Box::new(|m: worker::WorkerTask| {}));
+    let deps = Deps::new(Box::new(persistance), tx);
+
+    let svc = MySvc::new(deps);
 
     let result = HttpTestServer::new(svc).await;
     assert!(result.is_ok());

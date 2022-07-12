@@ -1,6 +1,5 @@
 use async_trait::async_trait;
 use futures::{sink::SinkExt, stream::StreamExt};
-use std::sync::Arc;
 
 use http::Request;
 use http::Response;
@@ -11,17 +10,17 @@ use hyper::Body;
 use hyper_tungstenite::{tungstenite, HyperWebsocket};
 use tungstenite::Message;
 
-use super::super::persistance::DBPersistence;
+use super::super::context::Deps;
 use super::Handler;
 
 #[derive(Clone)]
 pub struct Socket {
-    persistance: Arc<Box<dyn DBPersistence>>,
+    deps: Deps,
 }
 
 impl Socket {
-    pub fn new(persistance: Arc<Box<dyn DBPersistence>>) -> Self {
-        Socket { persistance }
+    pub fn new(deps: Deps) -> Self {
+        Socket { deps }
     }
 
     pub async fn ws_handle(self, ws: HyperWebsocket) -> Result<(), tungstenite::Error> {

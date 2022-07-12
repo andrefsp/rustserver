@@ -1,4 +1,3 @@
-use std::sync::Arc;
 use tokio::sync::oneshot::{channel, Receiver};
 
 use hyper::server::Server;
@@ -7,8 +6,8 @@ use hyper::Body;
 use routerify::Router;
 use routerify::RouterService;
 
+use super::context::Deps;
 use super::handlers::{CreateUser, GetUser, Handler, Socket};
-use super::persistance::DBPersistence;
 
 // route handler turns the handler into the appropriate closuse
 // to be given to the routerify router
@@ -46,16 +45,16 @@ macro_rules! router {
 
 #[derive(Clone)]
 pub struct MySvc {
-    persistance: Arc<Box<dyn DBPersistence>>,
+    deps: Deps,
 }
 
 #[allow(dead_code)]
 impl MySvc {
     pub fn router(&self) -> Router<Body, hyper::Error> {
         // Create the handlers here
-        let get_user = GetUser::new(self.persistance.clone());
-        let create_user = CreateUser::new(self.persistance.clone());
-        let socket = Socket::new(self.persistance.clone());
+        let get_user = GetUser::new(self.deps.clone());
+        let create_user = CreateUser::new(self.deps.clone());
+        let socket = Socket::new(self.deps.clone());
 
         router!(
             ("GET", "/users/:id", get_user),
@@ -64,10 +63,8 @@ impl MySvc {
         )
     }
 
-    pub fn new(persistance: Box<dyn DBPersistence>) -> MySvc {
-        MySvc {
-            persistance: Arc::new(persistance),
-        }
+    pub fn new(deps: Deps) -> MySvc {
+        MySvc { deps }
     }
 }
 

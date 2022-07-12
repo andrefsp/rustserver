@@ -1,5 +1,4 @@
 use std::str;
-use std::sync::Arc;
 
 use uuid::Uuid;
 
@@ -11,8 +10,8 @@ use async_trait::async_trait;
 
 use hyper::Body;
 
+use super::super::context::Deps;
 use super::super::models::user::User;
-use super::super::persistance::DBPersistence;
 
 use super::handlers::Handler;
 
@@ -22,12 +21,12 @@ fn new_id() -> String {
 
 #[derive(Clone)]
 pub struct CreateUser {
-    persistance: Arc<Box<dyn DBPersistence>>,
+    deps: Deps,
 }
 
 impl CreateUser {
-    pub fn new(persistance: Arc<Box<dyn DBPersistence>>) -> Self {
-        CreateUser { persistance }
+    pub fn new(deps: Deps) -> Self {
+        CreateUser { deps }
     }
 }
 
@@ -49,7 +48,7 @@ impl Handler for CreateUser {
 
         let user = object.unwrap();
 
-        let resp = match self.persistance.create_user(user).await {
+        let resp = match self.deps.persistance.create_user(user).await {
             Ok(user) => Response::builder()
                 .status(StatusCode::OK)
                 .body(user.to_json().into())
